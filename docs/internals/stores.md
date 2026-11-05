@@ -132,8 +132,6 @@ and reuses the same screenshots. The images (five 1280×800 screenshots, a 440×
 | `debugger` | Used where a page's own scripts would otherwise block an action: trusted clicks and key presses, working inside cross-origin frames, and pages whose Content Security Policy blocks injected scripts. It attaches only to the tab a task is working on, and Chrome shows its standard banner while attached. |
 | `offscreen` | Hands-free mode listens for the user's voice through an offscreen document, so it keeps working after the side panel is closed. |
 | `userScripts` | Runs a saved tool that the user has reviewed and approved on each visit to its site. It works only after the user turns on Allow User Scripts for Browsentic. |
-| `topSites` | Shows the user's most visited sites on Browsentic's new tab page, as the browser's own new tab page does. The list stays in the browser; it is never sent anywhere. |
-| `favicon` | Shows each site's icon beside its name on the new tab page, from the browser's own icon cache. |
 | Host permission `<all_urls>` | Browsentic works on whatever site the user is on, so it needs to read and act on any page the user asks it to. It does nothing on a page until the user gives it a task there, apart from features the user turns on themselves (a page monitor, a recording, or a saved tool set to run on every visit). |
 
 The `commands` key (keyboard shortcuts) needs no justification.
@@ -161,6 +159,5 @@ Browsentic needs Browsentic Bridge on the computer and an AI agent CLI; the exte
 2. Install and sign in to an agent CLI, such as Claude Code or Codex.
 3. Click Browsentic in the toolbar to open the side panel. It pairs with the Bridge by itself; if it asks for a code, enter the one the app or setup shows. (Skip any steps for loading an unpacked copy: the extension is already installed from the store.)
 4. Open the side panel on any web page and type a task, for example: Summarise what this page says.
-5. Open a new tab: it shows Browsentic Home. Type: go to example.com. The side panel opens with the conversation and the tab goes to the site. Settings > Extension > New tab switches Home off.
 Demo videos of the full flow: https://browsentic.com/demos/
 ```
