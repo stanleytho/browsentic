@@ -24,6 +24,27 @@ beforeEach(() => {
 
 afterEach(() => vi.restoreAllMocks());
 
+describe('an MCP call with no tab', () => {
+  test('navigates in a tab of its own and leaves the page the user is on', async () => {
+    const mine = await tabOn('https://mysite.example/');
+    const create = fakeBrowser.tabs.create.bind(fakeBrowser.tabs);
+    vi.spyOn(fakeBrowser.tabs, 'create').mockImplementation((async (info: object) => {
+      const tab = await create(info);
+      setTimeout(() => void fakeBrowser.tabs.onUpdated.trigger(tab.id!, { status: 'complete' }, tab), 0);
+      return tab;
+    }) as never);
+    const first = await invokeForHarness('page.navigate', { url: 'https://example.com/' });
+    const ours = (first as { data: { tabId: number } }).data.tabId;
+    expect(ours).not.toBe(mine);
+    expect((await fakeBrowser.tabs.get(mine)).url).toBe('https://mysite.example/');
+
+    sent.mockClear();
+    await invokeForHarness('page.navigate', { url: 'https://example.org/' });
+    expect(sent.mock.calls.map((call) => call[0])).toEqual([ours]);
+    expect((await fakeBrowser.tabs.get(mine)).url).toBe('https://mysite.example/');
+  });
+});
+
 describe('navigating away from a page that is not a web page', () => {
   test('the browser moves the tab, and nothing is sent into the page', async () => {
     const tabId = await tabOn(HOME);

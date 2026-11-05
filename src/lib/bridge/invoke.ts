@@ -233,6 +233,11 @@ async function dispatch(
   if (action === timerStatus.name) return statusOfTimers(input);
   if (action === stopTimer.name) return stopRequestedTimer(input);
 
+  if (action === navigate.name && !owner && tabId == null) {
+    const opened = await navigateInOwnTab(input);
+    if (opened) return opened;
+  }
+
   const tab = await resolveTab(tabId, owner);
   if (tab?.id == null) {
     if (owner) {
@@ -286,14 +291,41 @@ async function pinnedTab(tabId: number) {
   }
 }
 
+// A bare MCP call (no run, no tab) works in a tab of its own, so the page the user is on is never navigated away.
+// ponytail: one shared tab for every MCP client, a per-client tab if two clients ever need to run at once.
+const MCP_TAB_KEY = 'browsentic/mcpTab';
+
+async function mcpTab() {
+  const id = (await browser.storage.session.get(MCP_TAB_KEY))[MCP_TAB_KEY];
+  return typeof id === 'number' ? pinnedTab(id) : undefined;
+}
+
+async function adoptMcpTab(result: ActionResult) {
+  const id = result.ok ? (result.data as { tabId?: unknown }).tabId : undefined;
+  if (typeof id === 'number') await browser.storage.session.set({ [MCP_TAB_KEY]: id });
+}
+
+/** page.navigate to a URL with no tab of ours yet opens one instead of replacing the user's page. */
+async function navigateInOwnTab(input: unknown): Promise<ActionResult | null> {
+  const url = (input as { url?: unknown } | undefined)?.url;
+  if (typeof url !== 'string' || (await mcpTab())) return null;
+  const result = await openNewTab({ url, active: true });
+  await adoptMcpTab(result);
+  return result;
+}
+
 async function resolveTab(tabId: number | undefined, owner: TabSession | null) {
   if (owner) return (await pinnedTab(owner.currentTabId)) ?? (await pinnedTab(owner.mainTabId));
   if (tabId != null) return pinnedTab(tabId);
-  return (await browser.tabs.query({ active: true, currentWindow: true }))[0];
+  return (await mcpTab()) ?? (await browser.tabs.query({ active: true, currentWindow: true }))[0];
 }
 
 async function openSessionTab(input: unknown, owner: TabSession | null): Promise<ActionResult> {
-  if (!owner) return openNewTab(input);
+  if (!owner) {
+    const result = await openNewTab(input);
+    await adoptMcpTab(result);
+    return result;
+  }
   const anchor = (await pinnedTab(owner.currentTabId)) ?? (await pinnedTab(owner.mainTabId));
   const result = await openNewTab(input, anchor?.id != null ? { id: anchor.id, windowId: anchor.windowId } : undefined);
   if (!result.ok) return result;
