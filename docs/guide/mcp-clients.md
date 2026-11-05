@@ -10,11 +10,16 @@ Nothing here depends on which agent CLI the side panel runs on ([Choosing an age
 
 ## Register
 
-**Claude Code:**
+**Claude Code, one line, nothing to install first** (`npx` fetches and runs the server):
 
 ```sh
-claude mcp add browsentic -- browsentic mcp
+claude mcp add browsentic -- npx -y browsentic@latest mcp
 ```
+
+If `browsentic` is already installed globally, `claude mcp add browsentic -- browsentic mcp` does the same.
+
+The browser half is the extension, which has to be in the browser too: the store build, or `yarn build`
+and load `dist/chrome-mv3` as an unpacked extension. Run only one of the two.
 
 **Codex CLI**, in `~/.codex/config.toml`:
 
